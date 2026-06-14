@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products BG Remover</title>
+  <meta name="author" content="Founder Bilal - nexagaze">
+  <meta name="keywords" content="background removal, remove.bg, product image editor, transparent PNG, batch processor, nexagaze, bilal, AI, open source, behavior tracking">
+  <link rel="icon" href="data:,">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: #0f172a; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h2 { color: #38bdf8; text-align: center; }
+    .subtitle { color: #64748b; text-align: center; font-size: 0.85rem; margin-bottom: 1.5rem; }
+    .upload-zone { border: 2px dashed #334155; border-radius: 12px; padding: 3rem; text-align: center; cursor: pointer; transition: 0.2s; background: #1e293b; }
+    .upload-zone:hover, .upload-zone.dragover { border-color: #38bdf8; background: #1e3a4a; }
+    .upload-zone.has-image { padding: 0; border-style: solid; }
+    .upload-zone img { max-width: 100%; max-height: 360px; display: block; margin: 0 auto; border-radius: 8px; }
+    .upload-text .icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+    .upload-text p { font-size: 0.9rem; }
+    .controls { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; justify-content: center; }
+    .controls button { padding: 0.7rem 1.5rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    #removeBtn { background: #38bdf8; color: #0f172a; }
+    #removeBtn:hover { background: #0ea5e9; }
+    #removeBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+    #downloadBtn { background: #22c55e; color: #0f172a; }
+    #downloadBtn:hover { background: #16a34a; }
+    #downloadBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+    #resetBtn { background: #334155; color: #94a3b8; }
+    .preview-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+    @media (max-width:550px) { .preview-row { grid-template-columns: 1fr; } }
+    .preview-box { background: #1e293b; border-radius: 10px; padding: 1rem; text-align: center; }
+    .preview-box h4 { color: #94a3b8; font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .preview-box canvas, .preview-box img { max-width: 100%; max-height: 280px; border-radius: 6px; }
+    .preview-box canvas { background: repeating-conic-gradient(#334155 0% 25%, #1e293b 0% 50%) 50% / 16px 16px; }
+    .batch-controls { margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+    .batch-controls input[type=file] { display: none; }
+    .batch-btn { padding: 0.5rem 1rem; background: #1e293b; color: #94a3b8; border: 1px solid #334155; border-radius: 6px; cursor: pointer; font-size: 0.82rem; }
+    .batch-btn:hover { border-color: #38bdf8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Products BG Remover</h2>
+    <p class="subtitle">Powered by remove.bg API — drag & drop a product photo</p>
+
+    <div class="upload-zone" id="uploadZone">
+      <div class="upload-text" id="uploadText">
+        <span class="icon">🖼️</span>
+        <p>Drop a product photo here or click to upload</p>
+        <small>Supports JPG, PNG, WEBP</small>
+      </div>
+      <img id="preview" style="display:none;" />
+    </div>
+    <input type="file" id="fileInput" accept="image/*" />
+
+    <div class="controls">
+      <button id="removeBtn" disabled>Remove Background</button>
+      <button id="downloadBtn" disabled>Download PNG</button>
+      <button id="resetBtn">Clear</button>
+    </div>
+
+    <div class="batch-controls">
+      <label class="batch-btn" id="batchLabel">Batch Upload</label>
+      <input type="file" id="batchInput" accept="image/*" multiple />
+      <span id="batchCount" style="color:#64748b;font-size:0.82rem;"></span>
+    </div>
+
+    <div class="preview-row">
+      <div class="preview-box">
+        <h4>Original</h4>
+        <div id="originalPlaceholder" style="color:#475569;padding:4rem 1rem;font-size:0.82rem;">No image loaded</div>
+        <img id="originalImg" style="display:none;" />
+      </div>
+      <div class="preview-box">
+        <h4>Result (transparent bg)</h4>
+        <div id="resultPlaceholder" style="color:#475569;padding:4rem 1rem;font-size:0.82rem;">Process an image to see result</div>
+        <canvas id="resultCanvas" style="display:none;"></canvas>
+      </div>
+    </div>
+
+    <div id="batchResults" style="margin-top:1rem;display:none;">
+      <h4 style="color:#94a3b8;font-size:0.85rem;margin-bottom:0.5rem;">Batch Results</h4>
+      <div id="batchList" style="display:flex;gap:0.5rem;flex-wrap:wrap;"></div>
+      <button id="downloadAllBtn" class="batch-btn" style="margin-top:0.5rem;">Download All</button>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const batchInput = document.getElementById('batchInput');
+    const uploadZone = document.getElementById('uploadZone');
+    const preview = document.getElementById('preview');
+    const uploadText = document.getElementById('uploadText');
+    const originalImg = document.getElementById('originalImg');
+    const originalPlaceholder = document.getElementById('originalPlaceholder');
+    const resultCanvas = document.getElementById('resultCanvas');
+    const resultPlaceholder = document.getElementById('resultPlaceholder');
+    const removeBtn = document.getElementById('removeBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const batchCount = document.getElementById('batchCount');
+    const batchResults = document.getElementById('batchResults');
+    const batchList = document.getElementById('batchList');
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+
+    let currentFile = null;
+    let currentResultBlob = null;
+    let batchResultsArr = [];
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) loadImage(file);
+    });
+    fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadImage(fileInput.files[0]); });
+
+    function loadImage(file) {
+      currentFile = file;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        uploadZone.classList.add('has-image');
+        uploadText.style.display = 'none';
+        originalImg.src = e.target.result;
+        originalImg.style.display = 'block';
+        originalPlaceholder.style.display = 'none';
+        removeBtn.disabled = false;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function removeViaApi(file) {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await fetch('/api/remove-bg', { method: 'POST', body: formData });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'API error');
+      }
+      return res.blob();
+    }
+
+    function displayResult(blob) {
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        resultCanvas.width = img.naturalWidth;
+        resultCanvas.height = img.naturalHeight;
+        const ctx = resultCanvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resultCanvas.style.display = 'block';
+        resultPlaceholder.style.display = 'none';
+        currentResultBlob = blob;
+        downloadBtn.disabled = false;
+      };
+      img.src = url;
+    }
+
+    removeBtn.addEventListener('click', async () => {
+      if (!currentFile) return;
+      removeBtn.disabled = true;
+      removeBtn.textContent = 'Processing...';
+      try {
+        const blob = await removeViaApi(currentFile);
+        displayResult(blob);
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+      removeBtn.disabled = false;
+      removeBtn.textContent = 'Remove Background';
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!currentResultBlob) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(currentResultBlob);
+      a.download = (currentFile?.name?.replace(/\.[^.]+$/, '') || 'product') + '-no-bg.png';
+      a.click();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      currentFile = null;
+      currentResultBlob = null;
+      preview.style.display = 'none';
+      uploadZone.classList.remove('has-image');
+      uploadText.style.display = 'block';
+      originalImg.style.display = 'none';
+      originalPlaceholder.style.display = 'block';
+      resultCanvas.style.display = 'none';
+      resultPlaceholder.style.display = 'block';
+      removeBtn.disabled = true;
+      downloadBtn.disabled = true;
+      fileInput.value = '';
+    });
+
+    async function processFile(file) {
+      const blob = await removeViaApi(file);
+      batchResultsArr.push({ name: file.name.replace(/\.[^.]+$/, '') + '-no-bg.png', blob });
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        const thumb = document.createElement('canvas');
+        thumb.width = 80; thumb.height = 60;
+        const tctx = thumb.getContext('2d');
+        tctx.drawImage(img, 0, 0, 80, 60);
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:0.25rem;';
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = batchResultsArr[batchResultsArr.length - 1].name;
+        link.appendChild(thumb);
+        const label = document.createElement('span');
+        label.style.cssText = 'color:#94a3b8;font-size:0.7rem;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+        label.textContent = file.name;
+        div.appendChild(link);
+        div.appendChild(label);
+        batchList.appendChild(div);
+      };
+      img.src = url;
+    }
+
+    batchInput.addEventListener('change', async () => {
+      const files = [...batchInput.files];
+      if (files.length === 0) return;
+      batchCount.textContent = `${files.length} file(s) selected`;
+      batchResults.style.display = 'block';
+      batchList.innerHTML = '';
+      batchResultsArr = [];
+      for (let i = 0; i < files.length; i++) {
+        await processFile(files[i]);
+      }
+      downloadAllBtn.style.display = files.length > 1 ? 'inline-block' : 'none';
+    });
+
+    downloadAllBtn.addEventListener('click', async () => {
+      for (const item of batchResultsArr) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(item.blob);
+        a.download = item.name;
+        a.click();
+        await new Promise(res => setTimeout(res, 200));
+      }
+    });
+  </script>
+
+  <div style="text-align:center;padding:1rem;color:#475569;font-size:0.75rem;border-top:1px solid #1e293b;">
+    nexagaze project &mdash; built by Founder Bilal &bull;
+    <a href="mailto:ai@nexagaze.com" style="color:#64748b;">ai@nexagaze.com</a> &bull;
+    <a href="https://wa.me/9203103860653" style="color:#64748b;">03103860653</a>
+  </div>
+</body>
+</html>
