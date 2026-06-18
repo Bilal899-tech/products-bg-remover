@@ -3,47 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Products BG Remover</title>
+  <title>Products BG Remover - AI Background Removal</title>
   <meta name="author" content="Founder Bilal - nexagaze">
   <meta name="keywords" content="background removal, remove.bg, product image editor, transparent PNG, batch processor, nexagaze, bilal, AI, open source, behavior tracking">
   <link rel="icon" href="data:,">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-    body { background: #0f172a; min-height: 100vh; padding: 2rem; }
-    .container { max-width: 800px; margin: 0 auto; }
-    h2 { color: #38bdf8; text-align: center; }
-    .subtitle { color: #64748b; text-align: center; font-size: 0.85rem; margin-bottom: 1.5rem; }
-    .upload-zone { border: 2px dashed #334155; border-radius: 12px; padding: 3rem; text-align: center; cursor: pointer; transition: 0.2s; background: #1e293b; }
-    .upload-zone:hover, .upload-zone.dragover { border-color: #38bdf8; background: #1e3a4a; }
+    body { background: #ffffff; color: #1a1a1a; min-height: 100vh; padding: 2rem 1rem; display: flex; flex-direction: column; align-items: center; }
+    .hero { text-align: center; margin-bottom: 2rem; max-width: 800px; width: 100%; }
+    .hero h1 { font-size: 2rem; color: #16a34a; margin-bottom: 0.5rem; }
+    .hero .subtitle { color: #6b7280; font-size: 1rem; margin-bottom: 0.75rem; }
+    .hero .float-img { font-size: 3rem; display: inline-block; animation: float 3s ease-in-out infinite; }
+    .container { max-width: 800px; width: 100%; }
+    h2 { color: #16a34a; text-align: center; }
+    .subtitle-text { color: #6b7280; text-align: center; font-size: 0.85rem; margin-bottom: 1.5rem; }
+    .upload-zone { border: 2px dashed #e5e7eb; border-radius: 12px; padding: 3rem; text-align: center; cursor: pointer; transition: 0.2s; background: #f9fafb; }
+    .upload-zone:hover, .upload-zone.dragover { border-color: #22c55e; background: #f0fdf4; }
     .upload-zone.has-image { padding: 0; border-style: solid; }
     .upload-zone img { max-width: 100%; max-height: 360px; display: block; margin: 0 auto; border-radius: 8px; }
     .upload-text .icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
-    .upload-text p { font-size: 0.9rem; }
+    .upload-text p { font-size: 0.9rem; color: #4b5563; }
     .controls { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; justify-content: center; }
     .controls button { padding: 0.7rem 1.5rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-    #removeBtn { background: #38bdf8; color: #0f172a; }
-    #removeBtn:hover { background: #0ea5e9; }
+    #removeBtn { background: #22c55e; color: #ffffff; }
+    #removeBtn:hover { background: #16a34a; }
     #removeBtn:disabled { opacity: 0.5; cursor: not-allowed; }
-    #downloadBtn { background: #22c55e; color: #0f172a; }
-    #downloadBtn:hover { background: #16a34a; }
+    #downloadBtn { background: #16a34a; color: #ffffff; }
+    #downloadBtn:hover { background: #15803d; }
     #downloadBtn:disabled { opacity: 0.4; cursor: not-allowed; }
-    #resetBtn { background: #334155; color: #94a3b8; }
+    #resetBtn { background: #e5e7eb; color: #4b5563; }
+    #resetBtn:hover { background: #d1d5db; }
     .preview-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
     @media (max-width:550px) { .preview-row { grid-template-columns: 1fr; } }
-    .preview-box { background: #1e293b; border-radius: 10px; padding: 1rem; text-align: center; }
-    .preview-box h4 { color: #94a3b8; font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .preview-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1rem; text-align: center; }
+    .preview-box h4 { color: #4b5563; font-size: 0.85rem; margin-bottom: 0.5rem; }
     .preview-box canvas, .preview-box img { max-width: 100%; max-height: 280px; border-radius: 6px; }
-    .preview-box canvas { background: repeating-conic-gradient(#334155 0% 25%, #1e293b 0% 50%) 50% / 16px 16px; }
+    .preview-box canvas { background: repeating-conic-gradient(#e5e7eb 0% 25%, #f9fafb 0% 50%) 50% / 16px 16px; }
     .batch-controls { margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
     .batch-controls input[type=file] { display: none; }
-    .batch-btn { padding: 0.5rem 1rem; background: #1e293b; color: #94a3b8; border: 1px solid #334155; border-radius: 6px; cursor: pointer; font-size: 0.82rem; }
-    .batch-btn:hover { border-color: #38bdf8; }
+    .batch-btn { padding: 0.5rem 1rem; background: #f9fafb; color: #4b5563; border: 1px solid #e5e7eb; border-radius: 6px; cursor: pointer; font-size: 0.82rem; }
+    .batch-btn:hover { border-color: #22c55e; background: #f0fdf4; }
+    .footer { text-align: center; padding: 1rem; color: #9ca3af; font-size: 0.75rem; border-top: 1px solid #e5e7eb; margin-top: 1.5rem; max-width: 800px; width: 100%; }
+    .footer a { color: #22c55e; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+    @keyframes fadeInUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-15px); } }
+    .fade-in { opacity:0; transform:translateY(30px); transition:all 0.6s ease-out; }
+    .fade-in.visible { opacity:1; transform:translateY(0); }
+    .nav { animation: navslide 0.6s ease-out 0.2s both; }
+    @keyframes navslide { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Products BG Remover</h2>
-    <p class="subtitle">Powered by remove.bg API — drag & drop a product photo</p>
+<style>
+#nexasplash {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: #ffffff; z-index: 99999;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+  animation: nexafade 0.6s ease-out 1.5s forwards;
+}
+#nexasplash .nx-logo {
+  font-size: 48px; font-weight: 900; color: #ea580c;
+  letter-spacing: 3px; font-family: system-ui, -apple-system, sans-serif;
+  animation: nxpop 0.5s ease-out;
+}
+#nexasplash .nx-sub {
+  font-size: 13px; color: #9ca3af; margin-top: 8px;
+  letter-spacing: 5px; text-transform: uppercase;
+}
+@keyframes nexafade { to { opacity: 0; pointer-events: none; } }
+@keyframes nxpop { 0% { opacity: 0; transform: scale(0.5); } 70% { transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
+</style>
+<div id="nexasplash">
+  <div class="nx-logo">NEXAGAZE</div>
+  <div class="nx-sub">AI-Powered Solutions</div>
+</div>
+  <div class="hero fade-in">
+    <div class="float-img">🖼️</div>
+    <h1>Products BG Remover</h1>
+    <p class="subtitle">AI Background Removal — Powered by remove.bg API</p>
+  </div>
+
+  <div class="container fade-in">
+    <h2>Remove Backgrounds Instantly</h2>
+    <p class="subtitle-text">Drag & drop a product photo or click to upload</p>
 
     <div class="upload-zone" id="uploadZone">
       <div class="upload-text" id="uploadText">
@@ -64,27 +109,33 @@
     <div class="batch-controls">
       <label class="batch-btn" id="batchLabel">Batch Upload</label>
       <input type="file" id="batchInput" accept="image/*" multiple />
-      <span id="batchCount" style="color:#64748b;font-size:0.82rem;"></span>
+      <span id="batchCount" style="color:#6b7280;font-size:0.82rem;"></span>
     </div>
 
     <div class="preview-row">
       <div class="preview-box">
         <h4>Original</h4>
-        <div id="originalPlaceholder" style="color:#475569;padding:4rem 1rem;font-size:0.82rem;">No image loaded</div>
+        <div id="originalPlaceholder" style="color:#9ca3af;padding:4rem 1rem;font-size:0.82rem;">No image loaded</div>
         <img id="originalImg" style="display:none;" />
       </div>
       <div class="preview-box">
         <h4>Result (transparent bg)</h4>
-        <div id="resultPlaceholder" style="color:#475569;padding:4rem 1rem;font-size:0.82rem;">Process an image to see result</div>
+        <div id="resultPlaceholder" style="color:#9ca3af;padding:4rem 1rem;font-size:0.82rem;">Process an image to see result</div>
         <canvas id="resultCanvas" style="display:none;"></canvas>
       </div>
     </div>
 
     <div id="batchResults" style="margin-top:1rem;display:none;">
-      <h4 style="color:#94a3b8;font-size:0.85rem;margin-bottom:0.5rem;">Batch Results</h4>
+      <h4 style="color:#4b5563;font-size:0.85rem;margin-bottom:0.5rem;">Batch Results</h4>
       <div id="batchList" style="display:flex;gap:0.5rem;flex-wrap:wrap;"></div>
       <button id="downloadAllBtn" class="batch-btn" style="margin-top:0.5rem;">Download All</button>
     </div>
+  </div>
+
+  <div class="footer">
+    Nexagaze &mdash; built by Founder Bilal &bull;
+    <a href="mailto:ai@nexagaze.com">ai@nexagaze.com</a> &bull;
+    <a href="https://wa.me/9203103860653">03103860653</a>
   </div>
 
   <script>
@@ -217,7 +268,7 @@
         link.download = batchResultsArr[batchResultsArr.length - 1].name;
         link.appendChild(thumb);
         const label = document.createElement('span');
-        label.style.cssText = 'color:#94a3b8;font-size:0.7rem;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+        label.style.cssText = 'color:#6b7280;font-size:0.7rem;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
         label.textContent = file.name;
         div.appendChild(link);
         div.appendChild(label);
@@ -248,12 +299,11 @@
         await new Promise(res => setTimeout(res, 200));
       }
     });
-  </script>
 
-  <div style="text-align:center;padding:1rem;color:#475569;font-size:0.75rem;border-top:1px solid #1e293b;">
-    nexagaze project &mdash; built by Founder Bilal &bull;
-    <a href="mailto:ai@nexagaze.com" style="color:#64748b;">ai@nexagaze.com</a> &bull;
-    <a href="https://wa.me/9203103860653" style="color:#64748b;">03103860653</a>
-  </div>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  </script>
 </body>
 </html>

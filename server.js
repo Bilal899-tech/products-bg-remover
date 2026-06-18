@@ -5,6 +5,20 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const envPath = join(__dirname, '.env');
+if (existsSync(envPath)) {
+  for (const line of readFileSync(envPath, 'utf-8').split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+      const idx = trimmed.indexOf('=');
+      const key = trimmed.slice(0, idx).trim();
+      const val = trimmed.slice(idx + 1).trim();
+      if (!process.env[key]) process.env[key] = val;
+    }
+  }
+}
+
 const uploadsDir = join(__dirname, 'uploads');
 if (!existsSync(uploadsDir)) mkdirSync(uploadsDir);
 
@@ -12,10 +26,11 @@ const app = express();
 const upload = multer({ dest: uploadsDir });
 app.use(express.static('.'));
 
-const REMOVE_BG_KEY = '84TSKJu24rhLjCmgy5fQpfD1';
+const REMOVE_BG_KEY = process.env.REMOVE_BG_KEY || '';
 
 app.post('/api/remove-bg', upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  if (!REMOVE_BG_KEY) return res.status(500).json({ error: 'REMOVE_BG_KEY not set — create .env file (see .env.example)' });
   try {
     const buffer = readFileSync(req.file.path);
     const formData = new FormData();
